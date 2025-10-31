@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "common.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -122,6 +123,9 @@ int main(void)
   RingBuffer_Init(cm7_to_cm4_buffer, (void *) BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
 
   while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
+
+  uint32_t counter = 1;
+  uint32_t rxCounter = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -135,13 +139,28 @@ int main(void)
 
 	  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > 0)
 	  {
-		  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-		  RingBuffer_Read(cm7_to_cm4_buffer, UARTTXBuffer, RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer));
+//		  RingBuffer_Read(cm7_to_cm4_buffer, UARTTXBuffer, RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer));
+		  RingBuffer_Read(cm7_to_cm4_buffer, &rxCounter, sizeof(rxCounter));
 		  // Convert raw data to ASCII characters
-//		  sprintf(UARTTXBuffer, "%s\n", UARTTXBuffer[0]);
+
+//		  sprintf(UARTTXBuffer, "%d %d\n", cm7_to_cm4_buffer->r, cm7_to_cm4_buffer->w);
+
+
+		  if(counter == rxCounter)
+		  {
+			  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+
+			  sprintf(UARTTXBuffer, "%lu\n", rxCounter);
+			  counter++;
+		  }
+		  else
+		  {
+			  sprintf(UARTTXBuffer, "ERROR: Expected %lu, got %lu\n", counter, rxCounter);
+		  }
+
 		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
-//		  HAL_Delay(100);
 	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

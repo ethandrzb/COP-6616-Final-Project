@@ -152,22 +152,23 @@ Error_Handler();
 
   while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
 
+  uint32_t counter = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  for(int i = 0; i < strlen(ringbuf_tx_data); i++)
+	  // Write data if there's room
+	  if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > 0)
 	  {
+		  RingBuffer_Write(cm7_to_cm4_buffer, &counter, sizeof(counter));
 		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-		  // Write data if there's room
-		  if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > 0)
-		  {
-			  RingBuffer_Write(cm7_to_cm4_buffer, &(ringbuf_tx_data[i]), 1);
-		  }
-		  HAL_Delay(100);
 	  }
+
+	  counter++;
+	  HAL_Delay(1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

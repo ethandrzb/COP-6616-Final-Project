@@ -13,6 +13,8 @@
           - Benchmark memcpy vs DMA
 2. Isolate ring buffer as bottleneck
     - Non-ring buffer operations should be as light/minimal as possible
+3. Benchmark should be about the hardware, not request handling
+    - Use current approach as baseline and timer-automated DMA as experimental run
 
 # Actual Benchmarking Ideas
 ## Counter Hot-Potato
