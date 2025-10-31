@@ -49,3 +49,6 @@
 Test continues until Core 1 reports failure condition.
 ### Measurements
 - Maximum request rate for small data. Make sure to run each core as both the sender and receiver b/c they run at different frequencies. Need to identify impact of CPU speed on request processing rate.
+
+### Results
+- Preliminary baseline (TIM6 ARR of 34 was found using manual binary search): 29411.7647058824 requests handled/second

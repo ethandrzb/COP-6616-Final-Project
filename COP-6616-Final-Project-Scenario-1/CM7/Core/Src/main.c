@@ -53,22 +53,40 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+TIM_HandleTypeDef htim6;
+
 /* USER CODE BEGIN PV */
 volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
 char *ringbuf_tx_data = "Some text\n";
+
+uint32_t counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim == &htim6)
+	{
+		// Write data if there's room
+		if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > 0)
+		{
+			RingBuffer_Write(cm7_to_cm4_buffer, &counter, sizeof(counter));
+			HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+		}
 
+		counter++;
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -146,13 +164,14 @@ Error_Handler();
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   RingBuffer_Init(cm7_to_cm4_buffer, (void *) BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
 
   while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
 
-  uint32_t counter = 0;
+  HAL_TIM_Base_Start_IT(&htim6);
 
   /* USER CODE END 2 */
 
@@ -160,15 +179,15 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // Write data if there's room
-	  if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > 0)
-	  {
-		  RingBuffer_Write(cm7_to_cm4_buffer, &counter, sizeof(counter));
-		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-	  }
-
-	  counter++;
-	  HAL_Delay(1);
+//	  // Write data if there's room
+//	  if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > 0)
+//	  {
+//		  RingBuffer_Write(cm7_to_cm4_buffer, &counter, sizeof(counter));
+//		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+//	  }
+//
+//	  counter++;
+//	  HAL_Delay(0);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -233,6 +252,44 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 200-1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 34-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
 }
 
 /**

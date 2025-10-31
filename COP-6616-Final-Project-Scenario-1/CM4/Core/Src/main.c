@@ -124,7 +124,7 @@ int main(void)
 
   while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
 
-  uint32_t counter = 1;
+  uint32_t counter = 0;
   uint32_t rxCounter = 0;
   /* USER CODE END 2 */
 
