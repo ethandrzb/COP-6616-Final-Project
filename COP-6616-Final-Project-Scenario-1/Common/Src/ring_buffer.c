@@ -1,7 +1,12 @@
 #include "../Inc/ring_buffer.h"
+#include "stm32h7xx_hal.h"
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
+
+#define COPY(src, dest, size) memcpy(src, dest, size);
+//extern DMA_HandleTypeDef hdma_memtomem_bdma_channel0;
+//#define COPY(src, dest, size) HAL_DMA_Start_IT(&hdma_memtomem_bdma_channel0, (uint32_t) src, (uint32_t) dest, size);
 
 // -= Initialization =-
 void RingBuffer_Init(volatile ringbuf_t *buffer, void *internalBuffer, uint16_t size)
@@ -43,14 +48,14 @@ uint16_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint16_t 
 
 	// Step 2: Write until we reach the end of the array and advance write pointer
 	uint16_t numBytesToWriteBeforeOverflow = MIN(totalBytesToWrite, RingBuffer_GetWriteLength_Linear(buffer));
-	memcpy(&(buffer->data[buffer->w]), writeData, numBytesToWriteBeforeOverflow * sizeof(uint8_t));
+	COPY(&(buffer->data[buffer->w]), writeData, numBytesToWriteBeforeOverflow * sizeof(uint8_t));
 	buffer->w += numBytesToWriteBeforeOverflow;
 	totalBytesToWrite -= numBytesToWriteBeforeOverflow;
 
 	// Step 3: Write remaining data, if any, to start of buffer and advance write pointer
 	if(totalBytesToWrite > 0)
 	{
-		memcpy(buffer->data, &(writeData[numBytesToWriteBeforeOverflow]), totalBytesToWrite);
+		COPY(buffer->data, &(writeData[numBytesToWriteBeforeOverflow]), totalBytesToWrite);
 		buffer->w = totalBytesToWrite;
 	}
 
@@ -75,14 +80,14 @@ uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t re
 
 	// Step 2: Read until we reach the end of the array and advance read pointer
 	uint16_t numBytesToReadBeforeOverflow = MIN(totalBytesToRead, RingBuffer_GetReadLength_Linear(buffer));
-	memcpy(readData, &(buffer->data[buffer->r]), numBytesToReadBeforeOverflow * sizeof(uint8_t));
+	COPY(readData, &(buffer->data[buffer->r]), numBytesToReadBeforeOverflow * sizeof(uint8_t));
 	buffer->r += numBytesToReadBeforeOverflow;
 	totalBytesToRead -= numBytesToReadBeforeOverflow;
 
 	// Step 3: Read remaining data, if any, from start of buffer and advance read pointer
 	if(totalBytesToRead > 0)
 	{
-		memcpy(&(readData[numBytesToReadBeforeOverflow]), buffer->data, totalBytesToRead);
+		COPY(&(readData[numBytesToReadBeforeOverflow]), buffer->data, totalBytesToRead);
 		buffer->r = totalBytesToRead;
 	}
 
