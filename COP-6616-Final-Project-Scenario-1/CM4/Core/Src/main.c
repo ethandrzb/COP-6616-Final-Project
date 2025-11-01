@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "common.h"
 #include <stdio.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +54,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
+TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart3;
 
@@ -126,23 +129,18 @@ int main(void)
 
   uint32_t counter = 0;
   uint32_t rxCounter = 0;
+  bool done = false;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+  while (!done)
   {
-//	  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-//	  sprintf(UARTTXBuffer, "Some text to bring this core some joy\n");
-//	  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
-//	  HAL_Delay(500);
-
-	  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > 0)
+	  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > sizeof(rxCounter))
 	  {
 //		  RingBuffer_Read(cm7_to_cm4_buffer, UARTTXBuffer, RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer));
 		  RingBuffer_Read(cm7_to_cm4_buffer, &rxCounter, sizeof(rxCounter));
 		  // Convert raw data to ASCII characters
-
 //		  sprintf(UARTTXBuffer, "%d %d\n", cm7_to_cm4_buffer->r, cm7_to_cm4_buffer->w);
 
 
@@ -150,22 +148,73 @@ int main(void)
 		  {
 			  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 
-			  sprintf(UARTTXBuffer, "%lu\n", rxCounter);
+//			  sprintf(UARTTXBuffer, "%lu\n", rxCounter);
 			  counter++;
+
+			  if(counter % 100 == 0)
+			  {
+				  TIM6->ARR--;
+			  }
+//			  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  }
 		  else
 		  {
-			  sprintf(UARTTXBuffer, "ERROR: Expected %lu, got %lu\n", counter, rxCounter);
+			  done = true;
+			  break;
 		  }
-
-		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 	  }
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
+
+  while(true)
+  {
+	  sprintf(UARTTXBuffer, "TEST COMPLETE: Expected %lu, got %lu at ARR = %d\n", counter, rxCounter, TIM6->ARR);
+	  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
+	  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+	  HAL_Delay(250);
+  }
   /* USER CODE END 3 */
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 2-1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 5000-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
 }
 
 /**
@@ -229,11 +278,22 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : LED3_Pin */
+  GPIO_InitStruct.Pin = LED3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED3_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LED2_Pin */
   GPIO_InitStruct.Pin = LED2_Pin;

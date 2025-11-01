@@ -48,7 +48,16 @@
 
 Test continues until Core 1 reports failure condition.
 ### Measurements
-- Maximum request rate for small data. Make sure to run each core as both the sender and receiver b/c they run at different frequencies. Need to identify impact of CPU speed on request processing rate.
+- Maximum request rate for small data (4 byte unsigned integer in this case). Make sure to run each core as both the sender and receiver b/c they run at different frequencies. Need to identify impact of CPU speed on request processing rate.
 
-### Results
-- Preliminary baseline (TIM6 ARR of 34 was found using manual binary search): 29411.7647058824 requests handled/second
+### Results (lowest ARR value before failure)
+- Preliminary baseline with CM4 logging via UART (TIM6 ARR of ~3400 was found using manual binary search): 29411.7647058824 requests handled/second
+- Baseline: 304 (328947.368421053 requests handled/second)
+
+### Hardware Configuration Notes
+- Using TIM6, input clock 200 MHz, with prescalar 2 (100 MHz actual frequency)
+- Counter period (ARR) register starts at 5000 and decreases by 1 every 100 iterations if the consumers's local counter stays in sync with the received value from the producing core
+- Shared buffer is 1KB. Failure will not occur until the producing core overwrites data being read by the consuming core, so buffer size controls the delay between failure occurence and detection. Smaller buffers will fail sooner (e.g., min ARR with 16B buffer is 369 vs 304 with 1KB buffer)
+
+### Notes
+- UART and string functions are REALLY expensive (removing them allowed ARR to decrease from 1010 to 304 before failure)

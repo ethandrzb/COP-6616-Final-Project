@@ -179,15 +179,6 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  // Write data if there's room
-//	  if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > 0)
-//	  {
-//		  RingBuffer_Write(cm7_to_cm4_buffer, &counter, sizeof(counter));
-//		  HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-//	  }
-//
-//	  counter++;
-//	  HAL_Delay(0);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -272,9 +263,9 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 200-1;
+  htim6.Init.Prescaler = 2-1;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 34-1;
+  htim6.Init.Period = 5000-1;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
