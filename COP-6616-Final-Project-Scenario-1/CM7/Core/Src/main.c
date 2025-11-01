@@ -55,7 +55,6 @@
 
 TIM_HandleTypeDef htim6;
 
-DMA_HandleTypeDef hdma_memtomem_bdma_channel0;
 /* USER CODE BEGIN PV */
 volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
 char *ringbuf_tx_data = "Some text\n";
@@ -67,7 +66,6 @@ uint32_t counter = 0;
 void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_BDMA_Init(void);
 static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -166,7 +164,6 @@ Error_Handler();
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_BDMA_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
@@ -283,39 +280,6 @@ static void MX_TIM6_Init(void)
   /* USER CODE BEGIN TIM6_Init 2 */
 
   /* USER CODE END TIM6_Init 2 */
-
-}
-
-/**
-  * Enable DMA controller clock
-  * Configure DMA for memory to memory transfers
-  *   hdma_memtomem_bdma_channel0
-  */
-static void MX_BDMA_Init(void)
-{
-
-  /* DMA controller clock enable */
-  __HAL_RCC_BDMA_CLK_ENABLE();
-
-  /* Configure DMA request hdma_memtomem_bdma_channel0 on BDMA_Channel0 */
-  hdma_memtomem_bdma_channel0.Instance = BDMA_Channel0;
-  hdma_memtomem_bdma_channel0.Init.Request = BDMA_REQUEST_MEM2MEM;
-  hdma_memtomem_bdma_channel0.Init.Direction = DMA_MEMORY_TO_MEMORY;
-  hdma_memtomem_bdma_channel0.Init.PeriphInc = DMA_PINC_ENABLE;
-  hdma_memtomem_bdma_channel0.Init.MemInc = DMA_MINC_ENABLE;
-  hdma_memtomem_bdma_channel0.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-  hdma_memtomem_bdma_channel0.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-  hdma_memtomem_bdma_channel0.Init.Mode = DMA_NORMAL;
-  hdma_memtomem_bdma_channel0.Init.Priority = DMA_PRIORITY_MEDIUM;
-  if (HAL_DMA_Init(&hdma_memtomem_bdma_channel0) != HAL_OK)
-  {
-    Error_Handler( );
-  }
-
-  /* DMA interrupt init */
-  /* BDMA_Channel0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(BDMA_Channel0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(BDMA_Channel0_IRQn);
 
 }
 

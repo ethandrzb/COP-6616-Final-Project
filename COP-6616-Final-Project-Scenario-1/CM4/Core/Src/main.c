@@ -59,7 +59,6 @@ TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart3;
 
-DMA_HandleTypeDef hdma_memtomem_bdma_channel0;
 /* USER CODE BEGIN PV */
 volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
 
@@ -69,7 +68,6 @@ char UARTTXBuffer[UART_TX_BUFFER_SIZE];
 
 /* Private function prototypes -----------------------------------------------*/
 static void MX_GPIO_Init(void);
-static void MX_BDMA_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -123,7 +121,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_BDMA_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   RingBuffer_Init(cm7_to_cm4_buffer, (void *) BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
@@ -162,6 +159,8 @@ int main(void)
 		  }
 		  else
 		  {
+//			  sprintf(UARTTXBuffer, "Expected %lu, got %lu at ARR = %lu | %d %d\n", counter, rxCounter, TIM6->ARR, cm7_to_cm4_buffer->r, cm7_to_cm4_buffer->w);
+//			  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 			  done = true;
 			  break;
 		  }
@@ -265,34 +264,6 @@ static void MX_USART3_UART_Init(void)
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
-
-}
-
-/**
-  * Enable DMA controller clock
-  * Configure DMA for memory to memory transfers
-  *   hdma_memtomem_bdma_channel0
-  */
-static void MX_BDMA_Init(void)
-{
-
-  /* DMA controller clock enable */
-  __HAL_RCC_BDMA_CLK_ENABLE();
-
-  /* Configure DMA request hdma_memtomem_bdma_channel0 on BDMA_Channel0 */
-  hdma_memtomem_bdma_channel0.Instance = BDMA_Channel0;
-  hdma_memtomem_bdma_channel0.Init.Request = BDMA_REQUEST_MEM2MEM;
-  hdma_memtomem_bdma_channel0.Init.Direction = DMA_MEMORY_TO_MEMORY;
-  hdma_memtomem_bdma_channel0.Init.PeriphInc = DMA_PINC_ENABLE;
-  hdma_memtomem_bdma_channel0.Init.MemInc = DMA_MINC_ENABLE;
-  hdma_memtomem_bdma_channel0.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-  hdma_memtomem_bdma_channel0.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-  hdma_memtomem_bdma_channel0.Init.Mode = DMA_NORMAL;
-  hdma_memtomem_bdma_channel0.Init.Priority = DMA_PRIORITY_MEDIUM;
-  if (HAL_DMA_Init(&hdma_memtomem_bdma_channel0) != HAL_OK)
-  {
-    Error_Handler( );
-  }
 
 }
 
