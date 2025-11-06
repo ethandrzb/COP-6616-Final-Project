@@ -53,7 +53,7 @@ Test continues until Core 1 reports failure condition.
 ### Results (lowest ARR value before failure)
 - Preliminary baseline with CM4 logging via UART (TIM6 ARR of ~3400 was found using manual binary search): 29411.7647058824 requests handled/second
 - Baseline: 304 (328947.368421053 requests handled/second)
-- BDMA enabled, but not used in ring buffer: 298
+- BDMA enabled, but not used in ring buffer: 296
     - I'm not sure why this has an impact
 
 ### Hardware Configuration Notes

@@ -6,10 +6,10 @@
 
 #define COPY_WRITE(src, dest, size) memcpy(src, dest, size);
 #define COPY_READ(src, dest, size) memcpy(src, dest, size);
-//extern DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
-//extern DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
-//#define COPY_WRITE(src, dest, size) HAL_DMA_Start_IT(&hdma_memtomem_dma1_stream0, (uint32_t) src, (uint32_t) dest, size);
-//#define COPY_READ(src, dest, size) HAL_DMA_Start_IT(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size);
+// extern DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
+// extern DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
+// #define COPY_WRITE(src, dest, size) HAL_DMA_Start(&hdma_memtomem_dma1_stream0, (uint32_t) src, (uint32_t) dest, size);
+// #define COPY_READ(src, dest, size) HAL_DMA_Start(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size);
 
 // -= Initialization =-
 void RingBuffer_Init(volatile ringbuf_t *buffer, void *internalBuffer, uint16_t size)
@@ -52,6 +52,7 @@ uint16_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint16_t 
 	// Step 2: Write until we reach the end of the array and advance write pointer
 	uint16_t numBytesToWriteBeforeOverflow = MIN(totalBytesToWrite, RingBuffer_GetWriteLength_Linear(buffer));
 	COPY_WRITE(&(buffer->data[buffer->w]), writeData, numBytesToWriteBeforeOverflow * sizeof(uint8_t));
+//	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream0, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
 	buffer->w += numBytesToWriteBeforeOverflow;
 	totalBytesToWrite -= numBytesToWriteBeforeOverflow;
 
@@ -59,6 +60,7 @@ uint16_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint16_t 
 	if(totalBytesToWrite > 0)
 	{
 		COPY_WRITE(buffer->data, &(writeData[numBytesToWriteBeforeOverflow]), totalBytesToWrite);
+//		while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream0, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
 		buffer->w = totalBytesToWrite;
 	}
 
@@ -84,6 +86,7 @@ uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t re
 	// Step 2: Read until we reach the end of the array and advance read pointer
 	uint16_t numBytesToReadBeforeOverflow = MIN(totalBytesToRead, RingBuffer_GetReadLength_Linear(buffer));
 	COPY_READ(readData, &(buffer->data[buffer->r]), numBytesToReadBeforeOverflow * sizeof(uint8_t));
+//	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
 	buffer->r += numBytesToReadBeforeOverflow;
 	totalBytesToRead -= numBytesToReadBeforeOverflow;
 
@@ -91,6 +94,7 @@ uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t re
 	if(totalBytesToRead > 0)
 	{
 		COPY_READ(&(readData[numBytesToReadBeforeOverflow]), buffer->data, totalBytesToRead);
+//		while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
 		buffer->r = totalBytesToRead;
 	}
 
