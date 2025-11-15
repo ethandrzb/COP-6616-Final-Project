@@ -157,6 +157,12 @@ int main(void)
 			  if(counter % 100 == 0)
 			  {
 				  TIM6->ARR--;
+
+				  if(TIM6->ARR <= 0)
+				  {
+					  done = true;
+					  break;
+				  }
 			  }
 //			  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  }
@@ -176,10 +182,20 @@ int main(void)
 
   while(true)
   {
-	  sprintf(UARTTXBuffer, "TEST COMPLETE: Expected %lu, got %lu at ARR = %lu\n", counter, rxCounter, TIM6->ARR);
-	  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
-	  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
-	  HAL_Delay(250);
+	  if(TIM6->ARR <= 0)
+	  {
+		  sprintf(UARTTXBuffer, "TEST COMPLETE: ARR = %lu\n", TIM6->ARR);
+		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
+		  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+		  HAL_Delay(100);
+	  }
+	  else
+	  {
+		  sprintf(UARTTXBuffer, "TEST COMPLETE: Expected %lu, got %lu at ARR = %lu\n", counter, rxCounter, TIM6->ARR);
+		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
+		  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+		  HAL_Delay(250);
+	  }
   }
   /* USER CODE END 3 */
 }

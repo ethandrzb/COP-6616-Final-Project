@@ -110,14 +110,6 @@ int main(void)
   /* MPU Configuration--------------------------------------------------------*/
   MPU_Config();
 
-  /* Enable the CPU Cache */
-
-  /* Enable I-Cache---------------------------------------------------------*/
-  SCB_EnableICache();
-
-  /* Enable D-Cache---------------------------------------------------------*/
-  SCB_EnableDCache();
-
 /* USER CODE BEGIN Boot_Mode_Sequence_1 */
 #if defined(DUAL_CORE_BOOT_SYNC_SEQUENCE)
   /* Wait until CPU2 boots and enters in stop mode or timeout*/
