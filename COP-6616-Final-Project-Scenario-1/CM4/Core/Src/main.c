@@ -152,7 +152,6 @@ int main(void)
 			  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 
 //			  sprintf(UARTTXBuffer, "%lu\n", rxCounter);
-			  counter++;
 
 			  if(counter % 100 == 0)
 			  {
@@ -164,6 +163,8 @@ int main(void)
 					  break;
 				  }
 			  }
+
+			  counter++;
 //			  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  }
 		  else
@@ -184,7 +185,7 @@ int main(void)
   {
 	  if(TIM6->ARR <= 0)
 	  {
-		  sprintf(UARTTXBuffer, "TEST COMPLETE: ARR = %lu\n", TIM6->ARR);
+		  sprintf(UARTTXBuffer, "TEST COMPLETE: FINAL VALUE %lu == %lu at ARR = %lu\n", counter, rxCounter, TIM6->ARR);
 		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 		  HAL_Delay(100);
