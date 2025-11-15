@@ -5,11 +5,11 @@
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 //#define COPY_WRITE(dest, src, size) memcpy(dest, src, size);
-#define COPY_READ(dest, src, size) memcpy(dest, src, size);
+//#define COPY_READ(dest, src, size) memcpy(dest, src, size);
 extern DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
-//extern DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
+extern DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
 #define COPY_WRITE(dest, src, size) HAL_DMA_Start(&hdma_memtomem_dma1_stream0, (uint32_t) src, (uint32_t) dest, size);
-//#define COPY_READ(dest, src, size) HAL_DMA_Start(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size);
+#define COPY_READ(dest, src, size) HAL_DMA_Start(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size);
 
 extern uint8_t dma_transfer_over_s0;
 extern uint8_t dma_transfer_over_s1;
@@ -93,7 +93,7 @@ uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t re
 	// Step 2: Read until we reach the end of the array and advance read pointer
 	uint16_t numBytesToReadBeforeOverflow = MIN(totalBytesToRead, RingBuffer_GetReadLength_Linear(buffer));
 	COPY_READ(readData, &(buffer->data[buffer->r]), numBytesToReadBeforeOverflow * sizeof(uint8_t));
-//	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
+	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
 //	while(!dma_transfer_over_s1);
 //	dma_transfer_over_s1 = 0;
 	buffer->r += numBytesToReadBeforeOverflow;
@@ -103,7 +103,7 @@ uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t re
 	if(totalBytesToRead > 0)
 	{
 		COPY_READ(&(readData[numBytesToReadBeforeOverflow]), buffer->data, totalBytesToRead);
-//		while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
+		while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
 //		while(!dma_transfer_over_s1);
 //		dma_transfer_over_s1 = 0;
 		buffer->r = totalBytesToRead;

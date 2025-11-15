@@ -60,6 +60,7 @@ TIM_HandleTypeDef htim6;
 UART_HandleTypeDef huart3;
 
 DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
+DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
 /* USER CODE BEGIN PV */
 volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
 
@@ -291,6 +292,7 @@ static void MX_USART3_UART_Init(void)
   * Enable DMA controller clock
   * Configure DMA for memory to memory transfers
   *   hdma_memtomem_dma1_stream0
+  *   hdma_memtomem_dma1_stream1
   */
 static void MX_DMA_Init(void)
 {
@@ -313,6 +315,25 @@ static void MX_DMA_Init(void)
   hdma_memtomem_dma1_stream0.Init.MemBurst = DMA_MBURST_SINGLE;
   hdma_memtomem_dma1_stream0.Init.PeriphBurst = DMA_PBURST_SINGLE;
   if (HAL_DMA_Init(&hdma_memtomem_dma1_stream0) != HAL_OK)
+  {
+    Error_Handler( );
+  }
+
+  /* Configure DMA request hdma_memtomem_dma1_stream1 on DMA1_Stream1 */
+  hdma_memtomem_dma1_stream1.Instance = DMA1_Stream1;
+  hdma_memtomem_dma1_stream1.Init.Request = DMA_REQUEST_MEM2MEM;
+  hdma_memtomem_dma1_stream1.Init.Direction = DMA_MEMORY_TO_MEMORY;
+  hdma_memtomem_dma1_stream1.Init.PeriphInc = DMA_PINC_ENABLE;
+  hdma_memtomem_dma1_stream1.Init.MemInc = DMA_MINC_ENABLE;
+  hdma_memtomem_dma1_stream1.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  hdma_memtomem_dma1_stream1.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+  hdma_memtomem_dma1_stream1.Init.Mode = DMA_NORMAL;
+  hdma_memtomem_dma1_stream1.Init.Priority = DMA_PRIORITY_LOW;
+  hdma_memtomem_dma1_stream1.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+  hdma_memtomem_dma1_stream1.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+  hdma_memtomem_dma1_stream1.Init.MemBurst = DMA_MBURST_SINGLE;
+  hdma_memtomem_dma1_stream1.Init.PeriphBurst = DMA_PBURST_SINGLE;
+  if (HAL_DMA_Init(&hdma_memtomem_dma1_stream1) != HAL_OK)
   {
     Error_Handler( );
   }
