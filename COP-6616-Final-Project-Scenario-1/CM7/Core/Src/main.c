@@ -59,9 +59,11 @@ DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
 DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
 /* USER CODE BEGIN PV */
 volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
-char *ringbuf_tx_data = "Some text\n";
+//char *ringbuf_tx_data = "Some text\n";
 
 uint32_t counter = 0;
+
+uint32_t ringBufferTxData[TEST_BUFFER_SIZE];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,9 +83,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(htim == &htim6)
 	{
 		// Write data if there's room
-		if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) >= sizeof(counter))
+		if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) >= sizeof(ringBufferTxData))
 		{
-			RingBuffer_Write(cm7_to_cm4_buffer, &counter, sizeof(counter));
+			// Change first and last indices of TX data to make it unique
+			ringBufferTxData[0] = counter;
+			ringBufferTxData[TEST_BUFFER_SIZE - 1] = counter;
+
+			RingBuffer_Write(cm7_to_cm4_buffer, ringBufferTxData, sizeof(ringBufferTxData));
 			HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 		}
 
@@ -167,6 +173,12 @@ Error_Handler();
 
   while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
 
+  // Generate test data
+  for(int i = 0; i < TEST_BUFFER_SIZE; i++)
+  {
+	  ringBufferTxData[i] = i;
+  }
+
   HAL_TIM_Base_Start_IT(&htim6);
 
   /* USER CODE END 2 */
@@ -175,15 +187,6 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // Write data if there's room
-//	if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) >= sizeof(counter))
-//	{
-//		RingBuffer_Write(cm7_to_cm4_buffer, &counter, sizeof(counter));
-//		HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-//	}
-//
-//	counter++;
-//	HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -14,12 +14,12 @@ extern uint8_t dma_transfer_over_s1;
 
 #define COPY_WRITE(dest, src, size)\
 	HAL_DMA_Start(&hdma_memtomem_dma1_stream0, (uint32_t) src, (uint32_t) dest, size);\
-	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream0, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
+	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream0, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY) != HAL_OK) { __NOP(); }
 	//	while(!dma_transfer_over_s0);\
 	//	dma_transfer_over_s0 = 0;
 #define COPY_READ(dest, src, size)\
 	HAL_DMA_Start(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size);\
-	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, 100) != HAL_OK) { __NOP(); }
+	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY) != HAL_OK) { __NOP(); }
 	//	while(!dma_transfer_over_s1);\
 	//	dma_transfer_over_s1 = 0;
 #else

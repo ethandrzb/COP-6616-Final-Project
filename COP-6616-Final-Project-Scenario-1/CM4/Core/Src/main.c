@@ -132,7 +132,8 @@ int main(void)
   while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
 
   uint32_t counter = 0;
-  uint32_t rxCounter = 0;
+//  uint32_t rxCounter = 0;
+  uint32_t ringBufferRxData[TEST_BUFFER_SIZE];
   bool done = false;
   /* USER CODE END 2 */
 
@@ -140,15 +141,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (!done)
   {
-	  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > sizeof(rxCounter))
+	  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > sizeof(ringBufferRxData))
 	  {
 //		  RingBuffer_Read(cm7_to_cm4_buffer, UARTTXBuffer, RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer));
-		  RingBuffer_Read(cm7_to_cm4_buffer, &rxCounter, sizeof(rxCounter));
+		  RingBuffer_Read(cm7_to_cm4_buffer, ringBufferRxData, sizeof(ringBufferRxData));
 		  // Convert raw data to ASCII characters
 //		  sprintf(UARTTXBuffer, "%d %d\n", cm7_to_cm4_buffer->r, cm7_to_cm4_buffer->w);
 //		  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 
-		  if(counter == rxCounter)
+		  // Check first and last indices
+		  if((counter == ringBufferRxData[0]) && (counter == ringBufferRxData[TEST_BUFFER_SIZE - 1]))
 		  {
 			  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 
@@ -186,14 +188,14 @@ int main(void)
   {
 	  if(TIM6->ARR <= 0)
 	  {
-		  sprintf(UARTTXBuffer, "TEST COMPLETE: FINAL VALUE %lu == %lu at ARR = %lu\n", counter, rxCounter, TIM6->ARR);
+		  sprintf(UARTTXBuffer, "TEST COMPLETE: FINAL VALUE %lu == %lu == %lu at ARR = %lu\n", counter, ringBufferRxData[0], ringBufferRxData[TEST_BUFFER_SIZE - 1], TIM6->ARR);
 		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 		  HAL_Delay(100);
 	  }
 	  else
 	  {
-		  sprintf(UARTTXBuffer, "TEST COMPLETE: Expected %lu, got %lu at ARR = %lu\n", counter, rxCounter, TIM6->ARR);
+		  sprintf(UARTTXBuffer, "TEST COMPLETE: Expected %lu, got %lu, %lu at ARR = %lu\n", counter, ringBufferRxData[0], ringBufferRxData[TEST_BUFFER_SIZE - 1], TIM6->ARR);
 		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 		  HAL_Delay(250);
