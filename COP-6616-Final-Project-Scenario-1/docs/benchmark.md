@@ -67,3 +67,45 @@ Test continues until Core 1 reports failure condition.
 
 ### Notes
 - UART and string functions are REALLY expensive (removing them allowed ARR to decrease from 1010 to 304 before failure)
+
+ring buffer size = 0x7FF0 for all experiments
+
+starting ARR = 65000
+data size = 2048
+memcpy = 57874 (TX too slow)
+DMA = 42793 (TX too slow)
+
+starting ARR = 35000
+data size = 1024
+memcpy = 31250 (TX too slow)
+DMA = 22892 (TX too slow)
+
+starting ARR = 20000
+data size = 512
+memcpy = 15890 (TX too slow)
+DMA = 11954 (TX too slow)
+
+starting ARR = 10000
+data size = 256
+memcpy = 5270 (RX too slow)
+DMA = 6461 (TX too slow)
+
+starting ARR = 10000
+data size = 128
+memcpy = 2697 (RX too slow)
+DMA = 3890 (TX too slow)
+
+starting ARR = 10000
+data size = 64
+memcpy = 1401 (RX too slow)
+DMA = 2501 (TX too slow)
+
+starting ARR = 10000
+data size = 32
+memcpy = 915 (TX too slow)
+DMA = 1734 (TX too slow)
+
+starting ARR = 10000
+data size = 16
+memcpy = 685 (TX too slow)
+DMA = 1503 (TX too slow)
