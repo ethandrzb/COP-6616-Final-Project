@@ -90,6 +90,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			ringBufferTxData[TEST_BUFFER_SIZE - 1] = counter;
 
 			RingBuffer_Write(cm7_to_cm4_buffer, ringBufferTxData, sizeof(ringBufferTxData));
+
+			// If timer triggered another event while we're still processing the current event
+			if(TIM6->CNT & TIM_CNT_UIFCPY)
+			{
+				// Change counter to sentinel to cause desync on CM4 core
+				counter = -1;
+				return;
+			}
+
 			HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 		}
 
@@ -179,6 +188,8 @@ Error_Handler();
 	  ringBufferTxData[i] = i;
   }
 
+  // Force continuous copy of UIF to bit 31 of TIM6->CNT for atomic detection of rollover condition
+  TIM6->CR1 |= TIM_CR1_UIFREMAP;
   HAL_TIM_Base_Start_IT(&htim6);
 
   /* USER CODE END 2 */
@@ -273,8 +284,8 @@ static void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 2-1;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 5000-1;
-  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim6.Init.Period = 35000-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
     Error_Handler();

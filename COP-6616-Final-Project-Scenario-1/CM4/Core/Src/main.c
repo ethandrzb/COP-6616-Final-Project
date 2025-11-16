@@ -58,6 +58,7 @@
 TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_tx;
 
 DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
 DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
@@ -156,7 +157,7 @@ int main(void)
 
 //			  sprintf(UARTTXBuffer, "%lu\n", rxCounter);
 
-			  if(counter % 100 == 0)
+			  if(counter % 10 == 0)
 			  {
 				  TIM6->ARR--;
 
@@ -165,6 +166,12 @@ int main(void)
 					  done = true;
 					  break;
 				  }
+			  }
+
+			  if(counter % 10000 == 0)
+			  {
+				  sprintf(UARTTXBuffer, "ARR = %lu\n", TIM6->ARR);
+				  HAL_UART_Transmit_DMA(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 			  }
 
 			  counter++;
@@ -189,14 +196,14 @@ int main(void)
 	  if(TIM6->ARR <= 0)
 	  {
 		  sprintf(UARTTXBuffer, "TEST COMPLETE: FINAL VALUE %lu == %lu == %lu at ARR = %lu\n", counter, ringBufferRxData[0], ringBufferRxData[TEST_BUFFER_SIZE - 1], TIM6->ARR);
-		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
+		  HAL_UART_Transmit_DMA(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 		  HAL_Delay(100);
 	  }
 	  else
 	  {
 		  sprintf(UARTTXBuffer, "TEST COMPLETE: Expected %lu, got %lu, %lu at ARR = %lu\n", counter, ringBufferRxData[0], ringBufferRxData[TEST_BUFFER_SIZE - 1], TIM6->ARR);
-		  HAL_UART_Transmit_IT(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
+		  HAL_UART_Transmit_DMA(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 		  HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
 		  HAL_Delay(250);
 	  }
@@ -224,8 +231,8 @@ void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 2-1;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 5000-1;
-  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim6.Init.Period = 35000-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
     Error_Handler();
@@ -339,6 +346,11 @@ static void MX_DMA_Init(void)
   {
     Error_Handler( );
   }
+
+  /* DMA interrupt init */
+  /* DMA1_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
 
 }
 
