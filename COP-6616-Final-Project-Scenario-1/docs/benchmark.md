@@ -69,6 +69,7 @@ Test continues until Core 1 reports failure condition.
 - UART and string functions are REALLY expensive (removing them allowed ARR to decrease from 1010 to 304 before failure)
 
 ring buffer size = 0x7FF0 for all experiments
+ARR decremented every 10 successful transfers
 
 starting ARR = 65000
 data size = 2048
