@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "common.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +56,11 @@
 DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
 DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
 /* USER CODE BEGIN PV */
+volatile ringbuf_t *cm4_to_cm7_buffer = (void *) BUFF_CM4_TO_CM7_ADDR;
+volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
 
+uint32_t ringBufferTxData[TEST_BUFFER_SIZE];
+uint32_t ringBufferRxData[TEST_BUFFER_SIZE];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -142,13 +146,35 @@ Error_Handler();
   MX_GPIO_Init();
   MX_DMA_Init();
   /* USER CODE BEGIN 2 */
+  RingBuffer_Init(cm4_to_cm7_buffer, (void *) BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
+  while(!RingBuffer_Validate(cm4_to_cm7_buffer)) {}
 
+  RingBuffer_Init(cm7_to_cm4_buffer, (void *) BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
+  while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // Wait until entire input vector has been sent from CM4
+
+	  // Read input vector x from CM4==>CM7 buffer
+
+	  // Evaluate y = sin(x) on vector
+	  // Needs ~50000 us with 40 repetitions
+//	  for(int rep = 0; rep < 40; rep++)
+//	  {
+//		  for(int i = 0; i < DATA_LENGTH; i++)
+//		  {
+//			  y[i] = 31.0f * sinf(x[i]);
+//	//			  y[i] = 31.0f * sinf(x[i] + phi);
+//		  }
+//	  }
+
+	  // Wait until there is space in the CM7==>CM4 buffer
+	  // Send result vector y to CM7==>CM4 buffer
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "common.h"
 #include "ssd1306/ssd1306.h"
 #include <stdio.h>
 #include <math.h>
@@ -33,6 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define OFFLOAD_TO_CM7
 
 /* DUAL_CORE_BOOT_SYNC_SEQUENCE: Define for dual core boot synchronization    */
 /*                             demonstration code based on hardware semaphore */
@@ -67,6 +69,12 @@ DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
 /* USER CODE BEGIN PV */
 #define UART_TX_BUFFER_SIZE 100
 char UARTTXBuffer[UART_TX_BUFFER_SIZE];
+
+volatile ringbuf_t *cm4_to_cm7_buffer = (void *) BUFF_CM4_TO_CM7_ADDR;
+volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
+
+uint32_t ringBufferTxData[TEST_BUFFER_SIZE];
+uint32_t ringBufferRxData[TEST_BUFFER_SIZE];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -132,43 +140,34 @@ int main(void)
   MX_I2C4_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
+
+#ifdef OFFLOAD_TO_CM7
+  RingBuffer_Init(cm4_to_cm7_buffer, (void *) BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
+  while(!RingBuffer_Validate(cm4_to_cm7_buffer)) {}
+
+  RingBuffer_Init(cm7_to_cm4_buffer, (void *) BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
+  while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
+#endif
+
   ssd1306_Init();
   ssd1306_Fill(Black);
   ssd1306_UpdateScreen();
-
-//  ssd1306_SetCursor(0, 0);
-//  ssd1306_WriteString("Hello OLED!", Font_6x8, White);
-//  ssd1306_UpdateScreen();
-//
-//  ssd1306_SetCursor(0, 8);
-//  ssd1306_WriteString("Hello OLED!", Font_7x10, White);
-//  ssd1306_UpdateScreen();
-//
-//  ssd1306_SetCursor(0, 18);
-//  ssd1306_WriteString("Hello OLED!", Font_11x18, White);
-//  ssd1306_UpdateScreen();
-//
-//  ssd1306_SetCursor(0, 36);
-//  ssd1306_WriteString("Hello OLED!", Font_16x26, White);
-//  ssd1306_UpdateScreen();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+  // Length visible on screen
   const unsigned int LENGTH = 128;
+
+  // Length processed (using different value from LENGTH to simulate larger/more expensive operation)
   const unsigned int DATA_LENGTH = 1024;
+
   const float PI = 3.141593;
   float x[DATA_LENGTH];
   float y[DATA_LENGTH];
 
   float phi = 0.0f;
 
-  // Generate points for one period of sin
-  //  for(int i = 0; i < DATA_LENGTH; i++)
-  //  {
-  //	  x[i] = ((2 * PI) / LENGTH) * i;
-  //  }
   while (1)
   {
 	  ssd1306_Fill(Black);
@@ -186,6 +185,7 @@ int main(void)
 
 	  HAL_TIM_Base_Start(&htim7);
 
+#ifndef OFFLOAD_TO_CM7
 	  // Evaluate y = sin(x)
 	  // Needs ~50000 us with 40 repetitions
 	  for(int rep = 0; rep < 40; rep++)
@@ -196,6 +196,14 @@ int main(void)
 	//			  y[i] = 31.0f * sinf(x[i] + phi);
 		  }
 	  }
+#else
+	  // Wait until there is enough space in the CM4==>CM7 buffer
+	  // Send x array to CM7 using CM4==>CM7 ring buffer
+
+	  // Wait until results are available in CM7==>CM4 ring buffer
+
+	  // Receive results from CM7==>CM4 ring buffer
+#endif
 
 	  HAL_TIM_Base_Stop(&htim7);
 	  sprintf(UARTTXBuffer, "%lu\n", TIM7->CNT);
