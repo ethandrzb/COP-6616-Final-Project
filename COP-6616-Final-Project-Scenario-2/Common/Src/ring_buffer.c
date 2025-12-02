@@ -4,7 +4,7 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-#define RING_BUFFER_USE_DMA
+//#define RING_BUFFER_USE_DMA
 
 #ifdef RING_BUFFER_USE_DMA
 extern DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
@@ -29,7 +29,7 @@ extern uint8_t dma_transfer_over_s1;
 #endif
 
 // -= Initialization =-
-void RingBuffer_Init(volatile ringbuf_t *buffer, void *internalBuffer, uint16_t size)
+void RingBuffer_Init(volatile ringbuf_t *buffer, void *internalBuffer, uint32_t size)
 {
 	if((buffer == NULL) || (internalBuffer == NULL) || (size == 0))
 	{
@@ -56,7 +56,7 @@ void RingBuffer_Reset(volatile ringbuf_t *buffer)
 }
 
 // -= Main operations =-
-uint16_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint16_t writeSize)
+uint32_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint32_t writeSize)
 {
 	if(!RingBuffer_Validate(buffer) || writeData == NULL)
 	{
@@ -64,10 +64,10 @@ uint16_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint16_t 
 	}
 
 	// Step 1: Clip write size to maximum number of available bytes to write
-	uint16_t totalBytesToWrite = MIN(writeSize, RingBuffer_GetWriteLength_Ring(buffer));
+	uint32_t totalBytesToWrite = MIN(writeSize, RingBuffer_GetWriteLength_Ring(buffer));
 
 	// Step 2: Write until we reach the end of the array and advance write pointer
-	uint16_t numBytesToWriteBeforeOverflow = MIN(totalBytesToWrite, RingBuffer_GetWriteLength_Linear(buffer));
+	uint32_t numBytesToWriteBeforeOverflow = MIN(totalBytesToWrite, RingBuffer_GetWriteLength_Linear(buffer));
 	COPY_WRITE(&(buffer->data[buffer->w]), writeData, numBytesToWriteBeforeOverflow * sizeof(uint8_t));
 	buffer->w += numBytesToWriteBeforeOverflow;
 	totalBytesToWrite -= numBytesToWriteBeforeOverflow;
@@ -88,7 +88,7 @@ uint16_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint16_t 
 	return totalBytesToWrite + numBytesToWriteBeforeOverflow;
 }
 
-uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t readSize)
+uint32_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint32_t readSize)
 {
 	if(!RingBuffer_Validate(buffer) || readData == NULL)
 	{
@@ -96,10 +96,10 @@ uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t re
 	}
 
 	// Step 1: Clip read size to maximum number of available bytes to read
-	uint16_t totalBytesToRead = MIN(readSize, RingBuffer_GetReadLength_Ring(buffer));
+	uint32_t totalBytesToRead = MIN(readSize, RingBuffer_GetReadLength_Ring(buffer));
 
 	// Step 2: Read until we reach the end of the array and advance read pointer
-	uint16_t numBytesToReadBeforeOverflow = MIN(totalBytesToRead, RingBuffer_GetReadLength_Linear(buffer));
+	uint32_t numBytesToReadBeforeOverflow = MIN(totalBytesToRead, RingBuffer_GetReadLength_Linear(buffer));
 	COPY_READ(readData, &(buffer->data[buffer->r]), numBytesToReadBeforeOverflow * sizeof(uint8_t));
 	buffer->r += numBytesToReadBeforeOverflow;
 	totalBytesToRead -= numBytesToReadBeforeOverflow;
@@ -122,7 +122,7 @@ uint16_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint16_t re
 
 // -= Size operations =-
 // Treating the buffer as a ring
-uint16_t RingBuffer_GetReadLength_Ring(volatile ringbuf_t *buffer)
+uint32_t RingBuffer_GetReadLength_Ring(volatile ringbuf_t *buffer)
 {
 	if(!RingBuffer_Validate(buffer))
 	{
@@ -147,7 +147,7 @@ uint16_t RingBuffer_GetReadLength_Ring(volatile ringbuf_t *buffer)
 		return 0;
 	}
 }
-uint16_t RingBuffer_GetWriteLength_Ring(volatile ringbuf_t *buffer)
+uint32_t RingBuffer_GetWriteLength_Ring(volatile ringbuf_t *buffer)
 {
 	if(!RingBuffer_Validate(buffer))
 	{
@@ -174,7 +174,7 @@ uint16_t RingBuffer_GetWriteLength_Ring(volatile ringbuf_t *buffer)
 }
 
 // Treating the buffer as a 1D array
-uint16_t RingBuffer_GetReadLength_Linear(volatile ringbuf_t *buffer)
+uint32_t RingBuffer_GetReadLength_Linear(volatile ringbuf_t *buffer)
 {
 	if(!RingBuffer_Validate(buffer))
 	{
@@ -199,7 +199,7 @@ uint16_t RingBuffer_GetReadLength_Linear(volatile ringbuf_t *buffer)
 		return 0;
 	}
 }
-uint16_t RingBuffer_GetWriteLength_Linear(volatile ringbuf_t *buffer)
+uint32_t RingBuffer_GetWriteLength_Linear(volatile ringbuf_t *buffer)
 {
 	if(!RingBuffer_Validate(buffer))
 	{
@@ -246,5 +246,5 @@ void *RingBuffer_GetWriteAddress(volatile ringbuf_t *buffer)
 }
 
 // -= Manual pointer movement =-
-uint16_t RingBuffer_AdvanceReadPointer(volatile ringbuf_t *buffer, uint16_t size);
-uint16_t RingBuffer_AdvanceWritePointer(volatile ringbuf_t *buffer, uint16_t size);
+uint32_t RingBuffer_AdvanceReadPointer(volatile ringbuf_t *buffer, uint32_t size);
+uint32_t RingBuffer_AdvanceWritePointer(volatile ringbuf_t *buffer, uint32_t size);
