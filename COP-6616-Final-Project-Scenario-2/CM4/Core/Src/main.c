@@ -73,8 +73,15 @@ char UARTTXBuffer[UART_TX_BUFFER_SIZE];
 volatile ringbuf_t *cm4_to_cm7_buffer = (void *) BUFF_CM4_TO_CM7_ADDR;
 volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
 
-uint32_t ringBufferTxData[TEST_BUFFER_SIZE];
-uint32_t ringBufferRxData[TEST_BUFFER_SIZE];
+float x[TEST_BUFFER_SIZE];
+float y[TEST_BUFFER_SIZE];
+
+// Length visible on screen
+// TEST_BUFFER_SIZE in common.h must be greater than or equal to this value
+const unsigned int LENGTH = 128;
+// TEST_BUFFER_SIZE is the length processed (using different value from LENGTH to simulate larger/more expensive operation)
+
+const float PI = 3.141593;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -156,16 +163,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // Length visible on screen
-  const unsigned int LENGTH = 128;
-
-  // Length processed (using different value from LENGTH to simulate larger/more expensive operation)
-  const unsigned int DATA_LENGTH = 1024;
-
-  const float PI = 3.141593;
-  float x[DATA_LENGTH];
-  float y[DATA_LENGTH];
-
   float phi = 0.0f;
 
   while (1)
@@ -176,7 +173,7 @@ int main(void)
 
 	  // Generate points for one period of sin
 	  // Needs ~280 us
-	  for(int i = 0; i < DATA_LENGTH; i++)
+	  for(int i = 0; i < TEST_BUFFER_SIZE; i++)
 	  {
 		  x[i] = ((2 * PI) / LENGTH) * i + phi;
 	  }
@@ -190,19 +187,28 @@ int main(void)
 	  // Needs ~50000 us with 40 repetitions
 	  for(int rep = 0; rep < 40; rep++)
 	  {
-		  for(int i = 0; i < DATA_LENGTH; i++)
+		  for(int i = 0; i < TEST_BUFFER_SIZE; i++)
 		  {
 			  y[i] = 31.0f * sinf(x[i]);
 	//			  y[i] = 31.0f * sinf(x[i] + phi);
 		  }
 	  }
 #else
-	  // Wait until there is enough space in the CM4==>CM7 buffer
-	  // Send x array to CM7 using CM4==>CM7 ring buffer
+	  // If there is enough space in the CM4==>CM7 buffer
+	  if(RingBuffer_GetWriteLength_Ring(cm4_to_cm7_buffer) >= sizeof(x))
+	  {
+		  // Send x array to CM7 using CM4==>CM7 ring buffer
+		  RingBuffer_Write(cm4_to_cm7_buffer, x, sizeof(x));
 
-	  // Wait until results are available in CM7==>CM4 ring buffer
+		  // Wait until results are available in CM7==>CM4 ring buffer
+		  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) < sizeof(y)) {}
 
-	  // Receive results from CM7==>CM4 ring buffer
+		  // Receive results from CM7==>CM4 ring buffer
+		  if(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) >= sizeof(y))
+		  {
+			  RingBuffer_Read(cm7_to_cm4_buffer, y, sizeof(y));
+		  }
+	  }
 #endif
 
 	  HAL_TIM_Base_Stop(&htim7);

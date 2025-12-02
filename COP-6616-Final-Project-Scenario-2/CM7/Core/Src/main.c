@@ -59,8 +59,8 @@ DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
 volatile ringbuf_t *cm4_to_cm7_buffer = (void *) BUFF_CM4_TO_CM7_ADDR;
 volatile ringbuf_t *cm7_to_cm4_buffer = (void *) BUFF_CM7_TO_CM4_ADDR;
 
-uint32_t ringBufferTxData[TEST_BUFFER_SIZE];
-uint32_t ringBufferRxData[TEST_BUFFER_SIZE];
+float x[TEST_BUFFER_SIZE];
+float y[TEST_BUFFER_SIZE];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -158,22 +158,33 @@ Error_Handler();
   while (1)
   {
 	  // Wait until entire input vector has been sent from CM4
+	  while(RingBuffer_GetReadLength_Ring(cm4_to_cm7_buffer) < sizeof(x)) {}
 
 	  // Read input vector x from CM4==>CM7 buffer
+	  if(RingBuffer_GetReadLength_Ring(cm4_to_cm7_buffer) >= sizeof(x))
+	  {
+		  RingBuffer_Read(cm4_to_cm7_buffer, x, sizeof(x));
 
-	  // Evaluate y = sin(x) on vector
-	  // Needs ~50000 us with 40 repetitions
-//	  for(int rep = 0; rep < 40; rep++)
-//	  {
-//		  for(int i = 0; i < DATA_LENGTH; i++)
-//		  {
-//			  y[i] = 31.0f * sinf(x[i]);
-//	//			  y[i] = 31.0f * sinf(x[i] + phi);
-//		  }
-//	  }
+		  // Evaluate y = sin(x) on vector
+		  // Needs ~50000 us with 40 repetitions
+		  for(int rep = 0; rep < 40; rep++)
+		  {
+			  for(int i = 0; i < TEST_BUFFER_SIZE; i++)
+			  {
+				  y[i] = 31.0f * sinf(x[i]);
+		//			  y[i] = 31.0f * sinf(x[i] + phi);
+			  }
+		  }
 
-	  // Wait until there is space in the CM7==>CM4 buffer
-	  // Send result vector y to CM7==>CM4 buffer
+		  // Wait until there is space in the CM7==>CM4 buffer
+		  while(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) < sizeof(y)) {}
+
+		  // Send result vector y to CM7==>CM4 buffer
+		  if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) >= sizeof(y))
+		  {
+			  RingBuffer_Write(cm7_to_cm4_buffer, y, sizeof(y));
+		  }
+	  }
 
     /* USER CODE END WHILE */
 
