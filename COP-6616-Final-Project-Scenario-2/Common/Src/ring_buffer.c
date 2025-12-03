@@ -4,7 +4,7 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-//#define RING_BUFFER_USE_DMA
+#define RING_BUFFER_USE_DMA
 
 #ifdef RING_BUFFER_USE_DMA
 extern DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
@@ -13,13 +13,13 @@ extern uint8_t dma_transfer_over_s0;
 extern uint8_t dma_transfer_over_s1;
 
 #define COPY_WRITE(dest, src, size)\
-	HAL_DMA_Start(&hdma_memtomem_dma1_stream0, (uint32_t) src, (uint32_t) dest, size);\
-	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream0, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY) != HAL_OK) { __NOP(); }
+	while(HAL_DMA_Start(&hdma_memtomem_dma1_stream0, (uint32_t) src, (uint32_t) dest, size) != HAL_OK) { __NOP(); }\
+	HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream0, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY)\
 	//	while(!dma_transfer_over_s0);\
 	//	dma_transfer_over_s0 = 0;
 #define COPY_READ(dest, src, size)\
-	HAL_DMA_Start(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size);\
-	while(HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY) != HAL_OK) { __NOP(); }
+	while(HAL_DMA_Start(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size) != HAL_OK) { __NOP(); }\
+	HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY)\
 	//	while(!dma_transfer_over_s1);\
 	//	dma_transfer_over_s1 = 0;
 #else

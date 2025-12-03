@@ -198,12 +198,11 @@ int main(void)
 	  while(RingBuffer_GetWriteLength_Ring(cm4_to_cm7_buffer) > sizeof(x))
 	  {
 		  RingBuffer_Write(cm4_to_cm7_buffer, x, sizeof(x));
-
-		  // Receive results from CM7==>CM4 ring buffer
-		  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > sizeof(y))
-		  {
-			  RingBuffer_Read(cm7_to_cm4_buffer, y, sizeof(y));
-		  }
+	  }
+	  // Receive results from CM7==>CM4 ring buffer
+	  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > sizeof(y))
+	  {
+		  RingBuffer_Read(cm7_to_cm4_buffer, y, sizeof(y));
 	  }
 #endif
 
