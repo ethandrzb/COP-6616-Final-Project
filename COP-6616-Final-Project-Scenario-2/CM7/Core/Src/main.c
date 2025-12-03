@@ -164,14 +164,14 @@ Error_Handler();
 
 		  // Evaluate y = sin(x) on vector
 		  // Needs ~50000 us with 40 repetitions
-//		  for(int rep = 0; rep < 40; rep++)
-//		  {
+		  for(int rep = 0; rep < 40; rep++)
+		  {
 			  for(int i = 0; i < TEST_BUFFER_SIZE; i++)
 			  {
 				  y[i] = 31.0f * sinf(x[i]);
 		//			  y[i] = 31.0f * sinf(x[i] + phi);
 			  }
-//		  }
+		  }
 
 		  // Send result vector y to CM7==>CM4 buffer
 		  while(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > sizeof(y))

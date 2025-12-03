@@ -163,6 +163,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  // Phase shift in starting
   float phi = 0.0f;
 
   while (1)
