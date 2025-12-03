@@ -157,30 +157,24 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // Wait until entire input vector has been sent from CM4
-	  while(RingBuffer_GetReadLength_Ring(cm4_to_cm7_buffer) < sizeof(x)) {}
-
 	  // Read input vector x from CM4==>CM7 buffer
-	  if(RingBuffer_GetReadLength_Ring(cm4_to_cm7_buffer) >= sizeof(x))
+	  while(RingBuffer_GetReadLength_Ring(cm4_to_cm7_buffer) > sizeof(x))
 	  {
 		  RingBuffer_Read(cm4_to_cm7_buffer, x, sizeof(x));
 
 		  // Evaluate y = sin(x) on vector
 		  // Needs ~50000 us with 40 repetitions
-		  for(int rep = 0; rep < 40; rep++)
-		  {
+//		  for(int rep = 0; rep < 40; rep++)
+//		  {
 			  for(int i = 0; i < TEST_BUFFER_SIZE; i++)
 			  {
 				  y[i] = 31.0f * sinf(x[i]);
 		//			  y[i] = 31.0f * sinf(x[i] + phi);
 			  }
-		  }
-
-		  // Wait until there is space in the CM7==>CM4 buffer
-		  while(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) < sizeof(y)) {}
+//		  }
 
 		  // Send result vector y to CM7==>CM4 buffer
-		  if(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) >= sizeof(y))
+		  while(RingBuffer_GetWriteLength_Ring(cm7_to_cm4_buffer) > sizeof(y))
 		  {
 			  RingBuffer_Write(cm7_to_cm4_buffer, y, sizeof(y));
 		  }

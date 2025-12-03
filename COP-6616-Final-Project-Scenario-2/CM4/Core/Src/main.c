@@ -194,17 +194,13 @@ int main(void)
 		  }
 	  }
 #else
-	  // If there is enough space in the CM4==>CM7 buffer
-	  if(RingBuffer_GetWriteLength_Ring(cm4_to_cm7_buffer) >= sizeof(x))
+	  // Send x array to CM7 using CM4==>CM7 ring buffer
+	  while(RingBuffer_GetWriteLength_Ring(cm4_to_cm7_buffer) > sizeof(x))
 	  {
-		  // Send x array to CM7 using CM4==>CM7 ring buffer
 		  RingBuffer_Write(cm4_to_cm7_buffer, x, sizeof(x));
 
-		  // Wait until results are available in CM7==>CM4 ring buffer
-		  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) < sizeof(y)) {}
-
 		  // Receive results from CM7==>CM4 ring buffer
-		  if(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) >= sizeof(y))
+		  while(RingBuffer_GetReadLength_Ring(cm7_to_cm4_buffer) > sizeof(y))
 		  {
 			  RingBuffer_Read(cm7_to_cm4_buffer, y, sizeof(y));
 		  }
