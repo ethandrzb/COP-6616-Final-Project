@@ -59,6 +59,7 @@
 
 I2C_HandleTypeDef hi2c4;
 
+TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart3;
@@ -82,6 +83,8 @@ const unsigned int LENGTH = 128;
 // TEST_BUFFER_SIZE is the length processed (using different value from LENGTH to simulate larger/more expensive operation)
 
 const float PI = 3.141593;
+
+uint32_t FPS = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,13 +93,23 @@ static void MX_DMA_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_I2C4_Init(void);
 static void MX_TIM7_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim == &htim6)
+	{
+		sprintf(UARTTXBuffer, "%lu\n", FPS);
+		HAL_UART_Transmit_DMA(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 
+		FPS = 0;
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -146,6 +159,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_I2C4_Init();
   MX_TIM7_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
 #ifdef OFFLOAD_TO_CM7
@@ -159,12 +173,15 @@ int main(void)
   ssd1306_Init();
   ssd1306_Fill(Black);
   ssd1306_UpdateScreen();
+
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  float y0prev = 0.0f;
 
-  // Phase shift in starting
+  // Phase shift for input vector (x)
   float phi = 0.0f;
 
   while (1)
@@ -182,7 +199,7 @@ int main(void)
 //	  HAL_TIM_Base_Stop(&htim7);
 //	  TIM7->CNT = 0;
 
-	  HAL_TIM_Base_Start(&htim7);
+//	  HAL_TIM_Base_Start(&htim7);
 
 #ifndef OFFLOAD_TO_CM7
 	  // Evaluate y = sin(x)
@@ -208,11 +225,11 @@ int main(void)
 	  }
 #endif
 
-	  HAL_TIM_Base_Stop(&htim7);
-	  sprintf(UARTTXBuffer, "%lu\n", TIM7->CNT);
-	  HAL_UART_Transmit_DMA(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
-
-	  TIM7->CNT = 0;
+//	  HAL_TIM_Base_Stop(&htim7);
+//	  sprintf(UARTTXBuffer, "%lu\n", TIM7->CNT);
+//	  HAL_UART_Transmit_DMA(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
+//
+//	  TIM7->CNT = 0;
 	  // Display results on graph
 	  for(int i = 0; i < LENGTH; i++)
 	  {
@@ -222,11 +239,19 @@ int main(void)
 	//	  HAL_TIM_Base_Start(&htim7);
 	  // Needs ~29910 us
 	  ssd1306_UpdateScreen();
+//	  HAL_Delay(1);
 	//	  HAL_TIM_Base_Stop(&htim7);
 	//	  TIM7->CNT = 0;
 
 	  phi += 0.1;
 	  phi = fmod(phi, 2 * PI);
+
+	  // Update frame counter if we received a new frame
+	  if(y[0] != y0prev)
+	  {
+		  FPS++;
+		  y0prev = y[0];
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -279,6 +304,44 @@ static void MX_I2C4_Init(void)
   /* USER CODE BEGIN I2C4_Init 2 */
 
   /* USER CODE END I2C4_Init 2 */
+
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 20000-1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 10000-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
 
 }
 
