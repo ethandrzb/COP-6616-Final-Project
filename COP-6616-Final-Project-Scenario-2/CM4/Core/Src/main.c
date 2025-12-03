@@ -67,6 +67,8 @@ DMA_HandleTypeDef hdma_usart3_tx;
 
 DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
 DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
+DMA_HandleTypeDef hdma_memtomem_dma1_stream2;
+DMA_HandleTypeDef hdma_memtomem_dma1_stream3;
 /* USER CODE BEGIN PV */
 #define UART_TX_BUFFER_SIZE 100
 char UARTTXBuffer[UART_TX_BUFFER_SIZE];
@@ -168,6 +170,12 @@ int main(void)
 
   RingBuffer_Init(cm7_to_cm4_buffer, (void *) BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
   while(!RingBuffer_Validate(cm7_to_cm4_buffer)) {}
+
+  // Set up DMA streams for each buffer
+  cm4_to_cm7_buffer->readStream = &hdma_memtomem_dma1_stream0;
+  cm4_to_cm7_buffer->writeStream = &hdma_memtomem_dma1_stream1;
+  cm7_to_cm4_buffer->readStream = &hdma_memtomem_dma1_stream2;
+  cm7_to_cm4_buffer->writeStream = &hdma_memtomem_dma1_stream3;
 #endif
 
   ssd1306_Init();
@@ -230,28 +238,33 @@ int main(void)
 //	  HAL_UART_Transmit_DMA(&huart3, UARTTXBuffer, UART_TX_BUFFER_SIZE);
 //
 //	  TIM7->CNT = 0;
-	  // Display results on graph
-	  for(int i = 0; i < LENGTH; i++)
-	  {
-		  ssd1306_DrawPixel(i, y[i] + 32.0f, White);
-	  }
-
-	//	  HAL_TIM_Base_Start(&htim7);
-	  // Needs ~29910 us
-	  ssd1306_UpdateScreen();
-//	  HAL_Delay(1);
-	//	  HAL_TIM_Base_Stop(&htim7);
-	//	  TIM7->CNT = 0;
-
-	  phi += 0.1;
-	  phi = fmod(phi, 2 * PI);
 
 	  // Update frame counter if we received a new frame
 	  if(y[0] != y0prev)
 	  {
 		  FPS++;
 		  y0prev = y[0];
+
+		  // Display results on graph
+		  for(int i = 0; i < LENGTH; i++)
+		  {
+			  ssd1306_DrawPixel(i, y[i] + 32.0f, White);
+		  }
+
+		//	  HAL_TIM_Base_Start(&htim7);
+		  // Needs ~29910 us
+		  ssd1306_UpdateScreen();
+	  //	  HAL_Delay(1);
+		//	  HAL_TIM_Base_Stop(&htim7);
+		//	  TIM7->CNT = 0;
 	  }
+	  else
+	  {
+		  HAL_Delay(1);
+	  }
+
+	  phi += 0.1;
+	  phi = fmod(phi, 2 * PI);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -436,6 +449,8 @@ static void MX_USART3_UART_Init(void)
   * Configure DMA for memory to memory transfers
   *   hdma_memtomem_dma1_stream0
   *   hdma_memtomem_dma1_stream1
+  *   hdma_memtomem_dma1_stream2
+  *   hdma_memtomem_dma1_stream3
   */
 static void MX_DMA_Init(void)
 {
@@ -481,10 +496,48 @@ static void MX_DMA_Init(void)
     Error_Handler( );
   }
 
+  /* Configure DMA request hdma_memtomem_dma1_stream2 on DMA1_Stream2 */
+  hdma_memtomem_dma1_stream2.Instance = DMA1_Stream2;
+  hdma_memtomem_dma1_stream2.Init.Request = DMA_REQUEST_MEM2MEM;
+  hdma_memtomem_dma1_stream2.Init.Direction = DMA_MEMORY_TO_MEMORY;
+  hdma_memtomem_dma1_stream2.Init.PeriphInc = DMA_PINC_ENABLE;
+  hdma_memtomem_dma1_stream2.Init.MemInc = DMA_MINC_ENABLE;
+  hdma_memtomem_dma1_stream2.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  hdma_memtomem_dma1_stream2.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+  hdma_memtomem_dma1_stream2.Init.Mode = DMA_NORMAL;
+  hdma_memtomem_dma1_stream2.Init.Priority = DMA_PRIORITY_LOW;
+  hdma_memtomem_dma1_stream2.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+  hdma_memtomem_dma1_stream2.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+  hdma_memtomem_dma1_stream2.Init.MemBurst = DMA_MBURST_SINGLE;
+  hdma_memtomem_dma1_stream2.Init.PeriphBurst = DMA_PBURST_SINGLE;
+  if (HAL_DMA_Init(&hdma_memtomem_dma1_stream2) != HAL_OK)
+  {
+    Error_Handler( );
+  }
+
+  /* Configure DMA request hdma_memtomem_dma1_stream3 on DMA1_Stream3 */
+  hdma_memtomem_dma1_stream3.Instance = DMA1_Stream3;
+  hdma_memtomem_dma1_stream3.Init.Request = DMA_REQUEST_MEM2MEM;
+  hdma_memtomem_dma1_stream3.Init.Direction = DMA_MEMORY_TO_MEMORY;
+  hdma_memtomem_dma1_stream3.Init.PeriphInc = DMA_PINC_ENABLE;
+  hdma_memtomem_dma1_stream3.Init.MemInc = DMA_MINC_ENABLE;
+  hdma_memtomem_dma1_stream3.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  hdma_memtomem_dma1_stream3.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+  hdma_memtomem_dma1_stream3.Init.Mode = DMA_NORMAL;
+  hdma_memtomem_dma1_stream3.Init.Priority = DMA_PRIORITY_LOW;
+  hdma_memtomem_dma1_stream3.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+  hdma_memtomem_dma1_stream3.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+  hdma_memtomem_dma1_stream3.Init.MemBurst = DMA_MBURST_SINGLE;
+  hdma_memtomem_dma1_stream3.Init.PeriphBurst = DMA_PBURST_SINGLE;
+  if (HAL_DMA_Init(&hdma_memtomem_dma1_stream3) != HAL_OK)
+  {
+    Error_Handler( );
+  }
+
   /* DMA interrupt init */
-  /* DMA1_Stream2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
+  /* DMA1_Stream4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
 }
 

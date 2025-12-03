@@ -7,25 +7,19 @@
 #define RING_BUFFER_USE_DMA
 
 #ifdef RING_BUFFER_USE_DMA
-extern DMA_HandleTypeDef hdma_memtomem_dma1_stream0;
-extern DMA_HandleTypeDef hdma_memtomem_dma1_stream1;
-extern uint8_t dma_transfer_over_s0;
-extern uint8_t dma_transfer_over_s1;
 
-#define COPY_WRITE(dest, src, size)\
-	while(HAL_DMA_Start(&hdma_memtomem_dma1_stream0, (uint32_t) src, (uint32_t) dest, size) != HAL_OK) {}\
-	HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream0, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY)\
-	//	while(!dma_transfer_over_s0);\
-	//	dma_transfer_over_s0 = 0;
-#define COPY_READ(dest, src, size)\
-	while(HAL_DMA_Start(&hdma_memtomem_dma1_stream1, (uint32_t) src, (uint32_t) dest, size) != HAL_OK) {}\
-	HAL_DMA_PollForTransfer(&hdma_memtomem_dma1_stream1, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY)\
-	//	while(!dma_transfer_over_s1);\
-	//	dma_transfer_over_s1 = 0;
+#define COPY_WRITE(buffer, dest, src, size)\
+	while(HAL_DMA_Start(buffer->writeStream, (uint32_t) src, (uint32_t) dest, size) != HAL_OK) {}\
+	HAL_DMA_PollForTransfer(buffer->writeStream, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY)
+
+#define COPY_READ(buffer, dest, src, size)\
+	while(HAL_DMA_Start(buffer->readStream, (uint32_t) src, (uint32_t) dest, size) != HAL_OK) {}\
+	HAL_DMA_PollForTransfer(buffer->readStream, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY)
+
 #else
 
-#define COPY_WRITE(dest, src, size) memcpy(dest, src, size);
-#define COPY_READ(dest, src, size) memcpy(dest, src, size);
+#define COPY_WRITE(buffer, dest, src, size) memcpy(dest, src, size);
+#define COPY_READ(buffer, dest, src, size) memcpy(dest, src, size);
 #endif
 
 // -= Initialization =-
@@ -68,14 +62,14 @@ uint32_t RingBuffer_Write(volatile ringbuf_t *buffer, void *writeData, uint32_t 
 
 	// Step 2: Write until we reach the end of the array and advance write pointer
 	uint32_t numBytesToWriteBeforeOverflow = MIN(totalBytesToWrite, RingBuffer_GetWriteLength_Linear(buffer));
-	COPY_WRITE(&(buffer->data[buffer->w]), writeData, numBytesToWriteBeforeOverflow * sizeof(uint8_t));
+	COPY_WRITE(buffer, &(buffer->data[buffer->w]), writeData, numBytesToWriteBeforeOverflow * sizeof(uint8_t));
 	buffer->w += numBytesToWriteBeforeOverflow;
 	totalBytesToWrite -= numBytesToWriteBeforeOverflow;
 
 	// Step 3: Write remaining data, if any, to start of buffer and advance write pointer
 	if(totalBytesToWrite > 0)
 	{
-		COPY_WRITE(buffer->data, &(writeData[numBytesToWriteBeforeOverflow]), totalBytesToWrite);
+		COPY_WRITE(buffer, buffer->data, &(writeData[numBytesToWriteBeforeOverflow]), totalBytesToWrite);
 		buffer->w = totalBytesToWrite;
 	}
 
@@ -100,14 +94,14 @@ uint32_t RingBuffer_Read(volatile ringbuf_t *buffer, void *readData, uint32_t re
 
 	// Step 2: Read until we reach the end of the array and advance read pointer
 	uint32_t numBytesToReadBeforeOverflow = MIN(totalBytesToRead, RingBuffer_GetReadLength_Linear(buffer));
-	COPY_READ(readData, &(buffer->data[buffer->r]), numBytesToReadBeforeOverflow * sizeof(uint8_t));
+	COPY_READ(buffer, readData, &(buffer->data[buffer->r]), numBytesToReadBeforeOverflow * sizeof(uint8_t));
 	buffer->r += numBytesToReadBeforeOverflow;
 	totalBytesToRead -= numBytesToReadBeforeOverflow;
 
 	// Step 3: Read remaining data, if any, from start of buffer and advance read pointer
 	if(totalBytesToRead > 0)
 	{
-		COPY_READ(&(readData[numBytesToReadBeforeOverflow]), buffer->data, totalBytesToRead);
+		COPY_READ(buffer, &(readData[numBytesToReadBeforeOverflow]), buffer->data, totalBytesToRead);
 		buffer->r = totalBytesToRead;
 	}
 

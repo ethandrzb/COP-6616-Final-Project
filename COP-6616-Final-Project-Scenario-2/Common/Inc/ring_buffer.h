@@ -1,3 +1,4 @@
+#include "stm32h7xx_hal.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -9,6 +10,8 @@ typedef struct
 	uint32_t size;
 	uint32_t r;
 	uint32_t w;
+	DMA_HandleTypeDef *readStream;
+	DMA_HandleTypeDef *writeStream;
 
 } ringbuf_t;
 
