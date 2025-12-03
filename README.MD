@@ -1,6 +1,8 @@
 # COP-6616 Final Project
 This repo contains STM32CubeIDE projects for each of the scenarios tested. **Each project implements both the algorithms and experiments to test them.** Import each into STM32CubeIDE, build, and flash to an STM32 Nucleo H755ZI-Q board to reproduce results.
 
+# Video Demonstration: https://www.youtube.com/watch?v=14W7-2xvVIM
+
 ## Scenario 1: Unidirectional Communication Benchmark
 The CM7 core periodically sends data of a predetermined size and a counter to the CM4 core. The CM4 core verifies that it received the data correctly by comparing the counter with the expected value. If the counter doesn't match the expected value, the test is over and the timer period is printed to the serial terminal. The timer period is decremented every 10 successful transfers until failure.
 ## Scenario 2: Compute Offload using Bidirectional Communication
